@@ -122,15 +122,17 @@ readloop:
 
 func (hcp *hcpBackend) List(ctx context.Context, jobs chan listWorkerJob, entryCh chan Entry, wg *sync.WaitGroup) {
 	for j := range jobs {
-		logDMsg(`Directory: %#v`+j.Root, nil)
+		logDMsg(fmt.Sprintf(`Directory: %#v`, j.Root), nil)
 		u, err := url.Parse(hcp.URL)
 		u.Path = EncodePath(path.Join(u.Path, j.Root))
 		urlStr := u.String()
 		req, err := http.NewRequest(http.MethodGet, urlStr, nil)
-
 		if err != nil {
 			logDMsg(fmt.Sprintf("Couldn't create a request with namespaceURL %s", namespaceURL), err)
 			continue
+		}
+		if j.Root != "" {
+			u.Path = j.Root
 		}
 		req.Header.Set("Authorization", authToken)
 		req.Host = hostHeader
